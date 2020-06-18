@@ -7,6 +7,7 @@ Copyright (c) 2015 Microsoft Corporation
 #include<iostream>
 #include<stdlib.h>
 #include<climits>
+#include "util/mimalloc/mimalloc.h"
 #include "util/mutex.h"
 #include "util/trace.h"
 #include "util/memory_manager.h"
@@ -19,11 +20,11 @@ Copyright (c) 2015 Microsoft Corporation
 //      ADD_FINALIZER('rational::finalize();')
 // Thus, any executable or shared object (DLL) that depends on rational.h
 // will have an automatically generated file mem_initializer.cpp containing
-//    mem_initialize() 
+//    mem_initialize()
 //    mem_finalize()
 // and these functions will include the statements:
 //    rational::initialize();
-//    
+//
 //    rational::finalize();
 void mem_initialize();
 void mem_finalize();
@@ -75,11 +76,11 @@ static void throw_alloc_counts_exceeded() {
 static unsigned g_synch_counter = 0;
 class mem_usage_report {
 public:
-    ~mem_usage_report() { 
-        std::cerr << "(memory :max " << g_memory_max_used_size 
+    ~mem_usage_report() {
+        std::cerr << "(memory :max " << g_memory_max_used_size
                   << " :allocs " << g_memory_alloc_count
-                  << " :final " << g_memory_alloc_size 
-                  << " :synch " << g_synch_counter << ")" << std::endl; 
+                  << " :final " << g_memory_alloc_size
+                  << " :synch " << g_synch_counter << ")" << std::endl;
     }
 };
 mem_usage_report g_info;
@@ -117,7 +118,7 @@ bool memory::above_high_watermark() {
     return g_memory_watermark < g_memory_alloc_size;
 }
 
-// The following methods are only safe to invoke at 
+// The following methods are only safe to invoke at
 // initialization time, that is, before threads are created.
 
 void memory::set_max_size(size_t max_size) {
@@ -167,9 +168,9 @@ unsigned long long memory::get_max_used_memory() {
 #endif
 
 unsigned long long memory::get_max_memory_size() {
-#if defined(_WINDOWS)    
-    MEMORYSTATUSEX statex;    
-    statex.dwLength = sizeof (statex);    
+#if defined(_WINDOWS)
+    MEMORYSTATUSEX statex;
+    statex.dwLength = sizeof (statex);
     GlobalMemoryStatusEx (&statex);
     return statex.ullTotalPhys;
 #else
@@ -185,15 +186,15 @@ unsigned long long memory::get_allocation_count() {
 
 void memory::display_max_usage(std::ostream & os) {
     unsigned long long mem = get_max_used_memory();
-    os << "max. heap size:     " 
-       << static_cast<double>(mem)/static_cast<double>(1024*1024) 
+    os << "max. heap size:     "
+       << static_cast<double>(mem)/static_cast<double>(1024*1024)
        << " Mbytes\n";
 }
 
 void memory::display_i_max_usage(std::ostream & os) {
     unsigned long long mem = get_max_used_memory();
-    std::cout << "MEMORY " 
-              << static_cast<double>(mem)/static_cast<double>(1024*1024) 
+    std::cout << "MEMORY "
+              << static_cast<double>(mem)/static_cast<double>(1024*1024)
               << "\n";
 }
 
@@ -219,7 +220,7 @@ void * memory::allocate(char const* file, int line, char const* obj, size_t s) {
 
 
 // We only integrate the local thread counters with the global one
-// when the local counter > SYNCH_THRESHOLD 
+// when the local counter > SYNCH_THRESHOLD
 #define SYNCH_THRESHOLD 100000
 
 thread_local long long g_memory_thread_alloc_size    = 0;
@@ -257,7 +258,7 @@ void memory::deallocate(void * p) {
     size_t sz      = *sz_p;
     void * real_p  = reinterpret_cast<void*>(sz_p);
     g_memory_thread_alloc_size -= sz;
-    free(real_p);
+    mi_free(real_p);
     if (g_memory_thread_alloc_size < -SYNCH_THRESHOLD) {
         synchronize_counters(false);
     }
@@ -265,7 +266,7 @@ void memory::deallocate(void * p) {
 
 void * memory::allocate(size_t s) {
     s = s + sizeof(size_t); // we allocate an extra field!
-    void * r = malloc(s);
+    void * r = mi_malloc(s);
     if (r == 0) {
         throw_out_of_memory();
         return nullptr;
@@ -292,7 +293,7 @@ void* memory::reallocate(void *p, size_t s) {
         synchronize_counters(true);
     }
 
-    void *r = realloc(real_p, s);
+    void *r = mi_realloc(real_p, s);
     if (r == 0) {
         throw_out_of_memory();
         return nullptr;
@@ -317,7 +318,7 @@ void memory::deallocate(void * p) {
         lock_guard lock(*g_memory_mux);
         g_memory_alloc_size -= sz;
     }
-    free(real_p);
+    mi_free(real_p);
 }
 
 void * memory::allocate(size_t s) {
@@ -333,7 +334,7 @@ void * memory::allocate(size_t s) {
         if (g_memory_max_alloc_count != 0 && g_memory_alloc_count > g_memory_max_alloc_count)
             throw_alloc_counts_exceeded();
     }
-    void * r = malloc(s);
+    void * r = mi_malloc(s);
     if (r == nullptr) {
         throw_out_of_memory();
         return nullptr;
@@ -358,7 +359,7 @@ void* memory::reallocate(void *p, size_t s) {
         if (g_memory_max_alloc_count != 0 && g_memory_alloc_count > g_memory_max_alloc_count)
             throw_alloc_counts_exceeded();
     }
-    void *r = realloc(real_p, s);
+    void *r = mi_realloc(real_p, s);
     if (r == nullptr) {
         throw_out_of_memory();
         return nullptr;
@@ -366,5 +367,5 @@ void* memory::reallocate(void *p, size_t s) {
     *(static_cast<size_t*>(r)) = s;
     return static_cast<size_t*>(r) + 1; // we return a pointer to the location after the extra field
 }
- 
+
 #endif
