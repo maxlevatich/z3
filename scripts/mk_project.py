@@ -1,6 +1,6 @@
 ############################################
 # Copyright (c) 2012 Microsoft Corporation
-# 
+#
 # Z3 project configuration files
 #
 # Author: Leonardo de Moura (leonardo)
@@ -9,11 +9,12 @@ from mk_util import *
 
 def init_version():
     set_version(4, 8, 9, 0)
-    
+
 # Z3 Project definition
 def init_project_def():
     init_version()
-    add_lib('util', [], includes2install = ['z3_version.h'])
+    add_lib('mimalloc', [], 'util/mimalloc')
+    add_lib('util', ['mimalloc'], includes2install = ['z3_version.h'])
     add_lib('polynomial', ['util'], 'math/polynomial')
     add_lib('interval', ['util'], 'math/interval')
     add_lib('dd', ['util', 'interval'], 'math/dd')
@@ -23,8 +24,8 @@ def init_project_def():
     add_lib('realclosure', ['interval'], 'math/realclosure')
     add_lib('subpaving', ['interval'], 'math/subpaving')
     add_lib('ast', ['util', 'polynomial'])
-    add_lib('grobner', ['ast', 'dd', 'simplex'], 'math/grobner')    
-    add_lib('sat', ['util','dd', 'grobner'])    
+    add_lib('grobner', ['ast', 'dd', 'simplex'], 'math/grobner')
+    add_lib('sat', ['util','dd', 'grobner'])
     add_lib('nlsat', ['polynomial', 'sat'])
     add_lib('lp', ['util','nlsat','grobner', 'interval'], 'math/lp')
     add_lib('rewriter', ['ast', 'polynomial', 'automata'], 'ast/rewriter')
@@ -36,7 +37,7 @@ def init_project_def():
     add_lib('parser_util', ['ast'], 'parsers/util')
     add_lib('proofs', ['rewriter', 'util'], 'ast/proofs')
     add_lib('solver', ['model', 'tactic', 'proofs'])
-    add_lib('cmd_context', ['solver', 'rewriter'])    
+    add_lib('cmd_context', ['solver', 'rewriter'])
     add_lib('sat_tactic', ['tactic', 'sat', 'solver'], 'sat/tactic')
     add_lib('smt2parser', ['cmd_context', 'parser_util'], 'parsers/smt2')
     add_lib('pattern', ['normal_forms', 'smt2parser', 'rewriter'], 'ast/pattern')
@@ -58,7 +59,7 @@ def init_project_def():
     add_lib('sls_tactic', ['tactic', 'normal_forms', 'core_tactics', 'bv_tactics'], 'tactic/sls')
     add_lib('qe', ['smt','sat','nlsat','tactic','nlsat_tactic'], 'qe')
     add_lib('sat_solver', ['solver', 'core_tactics', 'aig_tactic', 'bv_tactics', 'arith_tactics', 'sat_tactic'], 'sat/sat_solver')
-    add_lib('fd_solver', ['core_tactics', 'arith_tactics', 'sat_solver', 'smt'], 'tactic/fd_solver') 
+    add_lib('fd_solver', ['core_tactics', 'arith_tactics', 'sat_solver', 'smt'], 'tactic/fd_solver')
     add_lib('muz', ['smt', 'sat', 'smt2parser', 'aig_tactic', 'qe'], 'muz/base')
     add_lib('dataflow', ['muz'], 'muz/dataflow')
     add_lib('transforms', ['muz', 'hilbert', 'dataflow'], 'muz/transforms')
@@ -95,8 +96,8 @@ def init_project_def():
     add_python_install(_libz3Component)
     add_js()
     # Examples
-    add_cpp_example('cpp_example', 'c++') 
-    add_cpp_example('z3_tptp', 'tptp') 
+    add_cpp_example('cpp_example', 'c++')
+    add_cpp_example('z3_tptp', 'tptp')
     add_c_example('c_example', 'c')
     add_c_example('maxsat')
     add_dotnet_example('dotnet_example', 'dotnet')
@@ -104,5 +105,3 @@ def init_project_def():
     add_ml_example('ml_example', 'ml')
     add_z3py_example('py_example', 'python')
     return API_files
-
-

@@ -69,4 +69,6 @@ z3_add_component(util
     rlimit.h
     symbol.h
     trace.h
+  COMPONENT_DEPENDENCIES
+    mimalloc
 )

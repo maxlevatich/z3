@@ -11,7 +11,7 @@ if (POLICY CMP0042)
 endif()
 
 set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_compiler_flags_overrides.cmake")
-project(Z3 VERSION 4.8.9.0 LANGUAGES CXX)
+project(Z3 VERSION 4.8.9.0 LANGUAGES CXX C)
 
 ################################################################################
 # Project version
@@ -234,7 +234,7 @@ else()
   message(FATAL_ERROR "Platform \"${CMAKE_SYSTEM_NAME}\" not recognised")
 endif()
 
-list(APPEND Z3_COMPONENT_EXTRA_INCLUDE_DIRS 
+list(APPEND Z3_COMPONENT_EXTRA_INCLUDE_DIRS
   "${PROJECT_BINARY_DIR}/src"
   "${PROJECT_SOURCE_DIR}/src"
 )
@@ -298,8 +298,8 @@ if (("${TARGET_ARCHITECTURE}" STREQUAL "x86_64") OR ("${TARGET_ARCHITECTURE}" ST
     set(SSE_FLAGS "-mfpmath=sse" "-msse" "-msse2")
   elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Intel")
     set(SSE_FLAGS "-mfpmath=sse" "-msse" "-msse2")
-    # Intel's compiler requires linking with libiomp5 
-    list(APPEND Z3_DEPENDENT_LIBS "iomp5") 
+    # Intel's compiler requires linking with libiomp5
+    list(APPEND Z3_DEPENDENT_LIBS "iomp5")
   elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     set(SSE_FLAGS "/arch:SSE2")
   else()
@@ -623,7 +623,7 @@ install(
 ################################################################################
 # Examples
 ################################################################################
-cmake_dependent_option(Z3_ENABLE_EXAMPLE_TARGETS 
+cmake_dependent_option(Z3_ENABLE_EXAMPLE_TARGETS
     "Build Z3 api examples" ON
     "CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR" OFF)
 if (Z3_ENABLE_EXAMPLE_TARGETS)
